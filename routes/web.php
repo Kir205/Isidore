@@ -22,3 +22,21 @@ Route::resource('pets', PetController::class)->only(['store', 'update', 'destroy
 // Invoices, Billing, & Automatic Inventory Reduction
 Route::resource('invoices', InvoiceController::class);
 Route::get('api/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.api.show');
+
+// Seed database on Supabase
+Route::get('seed-db', function () {
+    try {
+        \Artisan::call('db:seed', ['--force' => true]);
+        return response()->json([
+            'status' => 'seeded',
+            'output' => \Artisan::output(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
