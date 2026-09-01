@@ -53,9 +53,9 @@ php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 
-# Run migrations
-echo "Running migrations..."
-php artisan migrate --force --seed -v || echo "Migration complete or already exists"
+# Run schema migrations
+echo "Running schema migrations..."
+php artisan migrate --force -v || echo "Migrations up to date"
 
 # Build production cache
 php artisan config:cache || true
