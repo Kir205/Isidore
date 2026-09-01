@@ -19,9 +19,9 @@ export LOG_CHANNEL="stderr"
 export LOG_STACK="stderr"
 export APP_DEBUG="true"
 
-# Inject DATABASE_URL and DB_CONNECTION=pgsql into .env if present
+# Inject DATABASE_URL and parse credentials into .env
 if [ -n "$DATABASE_URL" ]; then
-    echo "Configuring PostgreSQL from DATABASE_URL into .env..."
+    echo "Parsing DATABASE_URL into .env..."
     sed -i '/^DB_CONNECTION=/d' .env
     sed -i '/^DATABASE_URL=/d' .env
     sed -i '/^DB_URL=/d' .env
@@ -30,6 +30,26 @@ if [ -n "$DATABASE_URL" ]; then
     echo "DATABASE_URL=\"$DATABASE_URL\"" >> .env
     echo "DB_URL=\"$DATABASE_URL\"" >> .env
     echo "DB_SSLMODE=require" >> .env
+
+    # Explicitly parse components into .env variables
+    php -r '
+    $url = getenv("DATABASE_URL");
+    if ($url) {
+        $p = parse_url($url);
+        $host = $p["host"] ?? "";
+        $port = $p["port"] ?? "5432";
+        $user = $p["user"] ?? "postgres";
+        $pass = $p["pass"] ?? "";
+        $db   = ltrim($p["path"] ?? "/postgres", "/");
+        $env = file_get_contents(".env");
+        $env = preg_replace("/^#?\s*DB_HOST=.*/m", "DB_HOST=$host", $env);
+        $env = preg_replace("/^#?\s*DB_PORT=.*/m", "DB_PORT=$port", $env);
+        $env = preg_replace("/^#?\s*DB_DATABASE=.*/m", "DB_DATABASE=$db", $env);
+        $env = preg_replace("/^#?\s*DB_USERNAME=.*/m", "DB_USERNAME=$user", $env);
+        $env = preg_replace("/^#?\s*DB_PASSWORD=.*/m", "DB_PASSWORD=\"$pass\"", $env);
+        file_put_contents(".env", $env);
+    }
+    '
 fi
 
 # Ensure storage write permissions
@@ -41,7 +61,7 @@ php artisan route:clear
 php artisan view:clear
 
 # Run database migrations and seeders on startup
-echo "Running database migrations..."
+echo "Running database migrations on PostgreSQL..."
 php artisan migrate --force --seed -v || echo "Migration encountered an issue"
 
 # Start the Laravel application
