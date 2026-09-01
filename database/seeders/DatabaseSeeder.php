@@ -518,8 +518,7 @@ class DatabaseSeeder extends Seeder
 
         // 5. Create Sample Invoices with Automatic Inventory Deduction and History
         // Invoice 1: Sarah Jenkins (Bailey - Vaccination + Flea Chews)
-        $inv1 = Invoice::create([
-            'invoice_number' => 'INV-2026-0001',
+        $inv1 = Invoice::firstOrCreate(['invoice_number' => 'INV-2026-0001'], [
             'customer_id' => $createdCustomers[0]->id,
             'pet_id' => $createdPets['Bailey']->id,
             'subtotal' => 82.50,
@@ -568,8 +567,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Invoice 2: Marcus Rodriguez (Luna - Skin infection treatment)
-        $inv2 = Invoice::create([
-            'invoice_number' => 'INV-2026-0002',
+        $inv2 = Invoice::firstOrCreate(['invoice_number' => 'INV-2026-0002'], [
             'customer_id' => $createdCustomers[1]->id,
             'pet_id' => $createdPets['Luna']->id,
             'subtotal' => 103.00,
@@ -616,8 +614,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Invoice 3: David & Emily Chen (Cleo - Gastro food & Consultation)
-        $inv3 = Invoice::create([
-            'invoice_number' => 'INV-2026-0003',
+        $inv3 = Invoice::firstOrCreate(['invoice_number' => 'INV-2026-0003'], [
             'customer_id' => $createdCustomers[2]->id,
             'pet_id' => $createdPets['Cleo']->id,
             'subtotal' => 71.00,
@@ -630,7 +627,7 @@ class DatabaseSeeder extends Seeder
             'paid_amount' => 71.00,
             'change_amount' => 0.00,
             'payment_status' => 'paid',
-            'payment_method' => 'credit_card',
+            'payment_method' => 'cash',
             'visit_reason' => 'Urinary Dietary Prescription & General Checkup',
             'notes' => 'Routine checkup and food pickup.',
             'diagnosis_treatment' => 'Urinary bladder ultrasound normal. Continue prescription c/d diet.',
