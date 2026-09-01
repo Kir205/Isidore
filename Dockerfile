@@ -1,7 +1,8 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    nginx \
     git \
     curl \
     zip \
@@ -11,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     nodejs \
     npm \
-    && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pcntl \
+    supervisor \
+    && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pcntl opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
@@ -36,22 +38,23 @@ RUN composer dump-autoload --optimize
 # Build frontend assets
 RUN npm run build
 
-# Create SQLite fallback database directory
+# Create storage/database directories
 RUN mkdir -p database && touch database/database.sqlite
-
-# Create storage directories
 RUN mkdir -p storage/framework/{cache,sessions,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache
 
-# Make entrypoint script executable
-RUN chmod +x /app/entrypoint.sh
-
 # Set permissions
+RUN chmod +x /app/entrypoint.sh
 RUN chmod -R 777 storage bootstrap/cache database
 
 # Prepare default .env
 RUN cp .env.example .env && php artisan key:generate
+
+# Copy nginx and supervisor configs
+COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 10000 8080 80
 
