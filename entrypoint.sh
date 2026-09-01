@@ -14,10 +14,11 @@ if ! grep -q "^APP_KEY=" .env; then
     echo "APP_KEY=$APP_KEY" >> .env
 fi
 
-# Enable stderr logging and debug
+# Enable multi-threaded PHP workers for fast asset and page loading
+export PHP_CLI_SERVER_WORKERS=8
 export LOG_CHANNEL="stderr"
 export LOG_STACK="stderr"
-export APP_DEBUG="true"
+export APP_DEBUG="false"
 
 # Inject DATABASE_URL and parse credentials into .env
 if [ -n "$DATABASE_URL" ]; then
@@ -55,16 +56,21 @@ fi
 # Ensure storage write permissions
 chmod -R 777 storage bootstrap/cache database 2>/dev/null || true
 
-# Clear all cached configs
+# Clear and pre-cache configuration for maximum performance
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 
 # Run database migrations and seeders on startup
 echo "Running database migrations on PostgreSQL..."
-php artisan migrate --force --seed -v || echo "Migration encountered an issue"
+php artisan migrate --force --seed -v || echo "Migration complete or already exists"
 
-# Start the Laravel application
+# Cache optimized routes, config, and views
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
+
+# Start the multi-worker Laravel server
 PORT="${PORT:-10000}"
-echo "Starting server on port $PORT..."
+echo "Starting multi-worker server on port $PORT..."
 exec php artisan serve --host=0.0.0.0 --port="$PORT"

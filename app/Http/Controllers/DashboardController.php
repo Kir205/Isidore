@@ -18,23 +18,21 @@ class DashboardController extends Controller
         $today = Carbon::today();
         $thisMonth = Carbon::now()->startOfMonth();
 
-        // Financial KPIs
-        $todayRevenue = Invoice::whereDate('created_at', $today)
+        // 1. Fetch Invoices for stats and chart in 1 single fast query
+        $invoices = Invoice::where('created_at', '>=', $thisMonth)
             ->where('payment_status', '!=', 'refunded')
-            ->sum('paid_amount');
+            ->get(['created_at', 'paid_amount', 'payment_status']);
 
-        $monthRevenue = Invoice::where('created_at', '>=', $thisMonth)
-            ->where('payment_status', '!=', 'refunded')
-            ->sum('paid_amount');
+        $todayRevenue = $invoices->filter(fn($i) => $i->created_at >= $today)->sum('paid_amount');
+        $monthRevenue = $invoices->sum('paid_amount');
 
+        // Customer, Pet, & Invoice counts
         $totalInvoicesCount = Invoice::count();
         $pendingPaymentsCount = Invoice::where('payment_status', 'pending')->count();
-
-        // Customer & Pet Counts
         $totalCustomers = Customer::count();
         $totalPets = Pet::count();
 
-        // Low stock items (physical items where stock <= reorder_level)
+        // Low stock items
         $lowStockItems = InventoryItem::with('category')
             ->where('is_service', false)
             ->where('is_active', true)
@@ -43,20 +41,20 @@ class DashboardController extends Controller
             ->get();
 
         $totalInventoryCount = InventoryItem::where('is_service', false)->where('is_active', true)->count();
-        $outOfStockCount = InventoryItem::where('is_service', false)->where('is_active', true)->where('stock_quantity', '<=', 0)->count();
+        $outOfStockCount = $lowStockItems->where('stock_quantity', '<=', 0)->count();
 
-        // Recent Invoices / Transactions
+        // Recent Invoices (6 items)
         $recentInvoices = Invoice::with(['customer', 'pet', 'items'])
             ->latest()
             ->take(6)
             ->get();
 
-        // 7-day revenue chart data
+        // Compute 7-day revenue chart in memory (0 extra network roundtrips)
         $revenueLast7Days = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $dayRevenue = Invoice::whereDate('created_at', $date)
-                ->where('payment_status', '!=', 'refunded')
+            $dayRevenue = $invoices
+                ->filter(fn($inv) => $inv->created_at->isSameDay($date))
                 ->sum('paid_amount');
 
             $revenueLast7Days[] = [
