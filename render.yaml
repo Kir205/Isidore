@@ -16,4 +16,6 @@ services:
       - key: APP_URL
         value: "https://isidore-clinic.onrender.com"
       - key: DB_CONNECTION
-        value: sqlite
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false
