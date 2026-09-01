@@ -27,51 +27,44 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Create Inventory Categories
-        $catAntibiotics = InventoryCategory::create([
+        $catAntibiotics = InventoryCategory::firstOrCreate(['slug' => 'antibiotics'], [
             'name' => 'Antibiotics & Anti-Infectives',
-            'slug' => 'antibiotics',
             'description' => 'Prescription antibiotics for bacterial infections in pets',
             'color' => 'emerald',
         ]);
 
-        $catVaccines = InventoryCategory::create([
+        $catVaccines = InventoryCategory::firstOrCreate(['slug' => 'vaccines'], [
             'name' => 'Vaccines & Biologics',
-            'slug' => 'vaccines',
             'description' => 'Core & non-core preventive vaccinations for canines and felines',
             'color' => 'blue',
         ]);
 
-        $catPainRelief = InventoryCategory::create([
+        $catPainRelief = InventoryCategory::firstOrCreate(['slug' => 'pain-relief'], [
             'name' => 'Pain Relief & Anti-Inflammatory',
-            'slug' => 'pain-relief',
             'description' => 'NSAIDs and analgesics for pain management and surgery recovery',
             'color' => 'indigo',
         ]);
 
-        $catParasites = InventoryCategory::create([
+        $catParasites = InventoryCategory::firstOrCreate(['slug' => 'antiparasitics'], [
             'name' => 'Antiparasitics & Dewormers',
-            'slug' => 'antiparasitics',
             'description' => 'Flea, tick, heartworm, and intestinal parasite control',
             'color' => 'amber',
         ]);
 
-        $catSupplies = InventoryCategory::create([
+        $catSupplies = InventoryCategory::firstOrCreate(['slug' => 'supplies'], [
             'name' => 'Clinical Supplies & Bandages',
-            'slug' => 'supplies',
             'description' => 'Medical consumables, bandages, syringes, and IV lines',
             'color' => 'cyan',
         ]);
 
-        $catFood = InventoryCategory::create([
+        $catFood = InventoryCategory::firstOrCreate(['slug' => 'nutrition'], [
             'name' => 'Therapeutic Food & Nutrition',
-            'slug' => 'nutrition',
             'description' => 'Veterinary prescription diet foods and recovery supplements',
             'color' => 'orange',
         ]);
 
-        $catServices = InventoryCategory::create([
+        $catServices = InventoryCategory::firstOrCreate(['slug' => 'services'], [
             'name' => 'Clinical & Diagnostic Services',
-            'slug' => 'services',
             'description' => 'Veterinary consultations, minor surgeries, lab work, grooming',
             'color' => 'rose',
         ]);
@@ -380,7 +373,7 @@ class DatabaseSeeder extends Seeder
 
         $createdItems = [];
         foreach ($itemsData as $data) {
-            $item = InventoryItem::create($data);
+            $item = InventoryItem::firstOrCreate(['sku' => $data['sku']], $data);
             $createdItems[$item->sku] = $item;
 
             // Log initial stock movement for physical items
