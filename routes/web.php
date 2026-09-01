@@ -26,11 +26,14 @@ Route::get('api/invoices/{invoice}', [InvoiceController::class, 'show'])->name('
 // Database diagnostic & migration triggers
 Route::get('debug-db', function () {
     try {
-        \DB::connection()->getPdo();
-        $tables = \DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        $pdo = \DB::connection()->getPdo();
+        $driver = \DB::connection()->getDriverName();
+        $tables = $driver === 'pgsql' 
+            ? \DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+            : \DB::select("SELECT name as table_name FROM sqlite_master WHERE type='table'");
         return response()->json([
             'status' => 'connected',
-            'driver' => \DB::connection()->getDriverName(),
+            'driver' => $driver,
             'database' => \DB::connection()->getDatabaseName(),
             'tables' => $tables,
         ]);
