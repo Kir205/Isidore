@@ -8,6 +8,7 @@ fi
 
 # Enable stderr logging so Render logs show all details
 export LOG_CHANNEL="stderr"
+export LOG_STACK="stderr"
 export APP_DEBUG="true"
 
 # Sync DATABASE_URL and DB_URL
@@ -27,7 +28,7 @@ php artisan view:clear
 
 # Run database migrations and seeders on startup
 echo "Running database migrations on $DB_CONNECTION..."
-php artisan migrate --force --seed || echo "Migration encountered an issue"
+php artisan migrate --force --seed -v || echo "Migration encountered an issue"
 
 # Start the Laravel application
 PORT="${PORT:-10000}"
